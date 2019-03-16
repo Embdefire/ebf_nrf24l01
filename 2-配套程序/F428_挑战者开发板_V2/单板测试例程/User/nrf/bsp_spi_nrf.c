@@ -8,14 +8,13 @@
   ******************************************************************************
   * @attention
   *
-  * 实验平台:野火STM32 霸道开发板  
+  * 实验平台:野火  STM32 F429 挑战者开发板  
   * 论坛    :http://www.chuxue123.com
   * 淘宝    :http://firestm32.taobao.com
   *
   ******************************************************************************
   */ 
 #include "bsp_spi_nrf.h"
-#include "bsp_usart1.h"
 
  u8 RX_BUF[RX_PLOAD_WIDTH];		//接收数据缓存
  u8 TX_BUF[TX_PLOAD_WIDTH];		//发射数据缓存
@@ -37,55 +36,80 @@ void SPI_NRF_Init(void)
   SPI_InitTypeDef  SPI_InitStructure;
   GPIO_InitTypeDef GPIO_InitStructure;
   
+  RCC_AHB1PeriphClockCmd (NRF_SPI_SCK_GPIO_CLK | NRF_SPI_MISO_GPIO_CLK|NRF_SPI_MOSI_GPIO_CLK, ENABLE);
+
   /*开启相应IO端口的时钟*/
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF
                          |NRF_CSN_GPIO_CLK
                          |NRF_CE_GPIO_CLK
                          |NRF_IRQ_GPIO_CLK,ENABLE);
 
- /*使能SPI1时钟*/
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
-
-   /*配置 SPI_NRF_SPI的 SCK,MISO,MOSI引脚，GPIOA^5,GPIOA^6,GPIOA^7 */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5|GPIO_Pin_6|GPIO_Pin_7;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP; //复用功能
-  GPIO_Init(GPIOA, &GPIO_InitStructure);  
-
-  /*配置SPI_NRF_SPI的CE引脚,和SPI_NRF_SPI的 CSN 引脚*/
-   GPIO_InitStructure.GPIO_Pin = NRF_CSN_PIN;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  /*配置SPI_NRF_SPI的CE引脚,和SPI_NRF_SPI的 CSN 引脚*/														   
+  GPIO_InitStructure.GPIO_Pin = NRF_CSN_PIN;	
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;  
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz; 
   GPIO_Init(NRF_CSN_GPIO_PORT, &GPIO_InitStructure);
   
-  GPIO_InitStructure.GPIO_Pin = NRF_CE_PIN;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  GPIO_InitStructure.GPIO_Pin = NRF_CE_PIN;	
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;  
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz; 
   GPIO_Init(NRF_CE_GPIO_PORT, &GPIO_InitStructure);
+  
+  GPIO_InitStructure.GPIO_Pin = NRF_IRQ_PIN;	
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;  
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz; 
+  GPIO_Init(NRF_IRQ_GPIO_PORT, &GPIO_InitStructure);
+  
+  /*!< SPI_NRF_SPI 时钟使能 */
+  NRF_SPI_CLK_INIT(NRF_SPI_CLK, ENABLE);
+ 
+  //设置引脚复用
+  GPIO_PinAFConfig(NRF_SPI_SCK_GPIO_PORT,NRF_SPI_SCK_PINSOURCE,NRF_SPI_SCK_AF); 
+	GPIO_PinAFConfig(NRF_SPI_MISO_GPIO_PORT,NRF_SPI_MISO_PINSOURCE,NRF_SPI_MISO_AF); 
+	GPIO_PinAFConfig(NRF_SPI_MOSI_GPIO_PORT,NRF_SPI_MOSI_PINSOURCE,NRF_SPI_MOSI_AF); 
+  
+  /*!< 配置 SPI_NRF_SPI 引脚: SCK */
+  GPIO_InitStructure.GPIO_Pin = NRF_SPI_SCK_PIN;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;  
+  
+  GPIO_Init(NRF_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
+  
+	/*!< 配置 SPI_NRF_SPI 引脚: MISO */
+  GPIO_InitStructure.GPIO_Pin = NRF_SPI_MISO_PIN;
+  GPIO_Init(NRF_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
+  
+	/*!< 配置 SPI_NRF_SPI 引脚: MOSI */
+  GPIO_InitStructure.GPIO_Pin = NRF_SPI_MOSI_PIN;
+  GPIO_Init(NRF_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);  
 
-
-   /*配置SPI_NRF_SPI的IRQ引脚*/
-  GPIO_InitStructure.GPIO_Pin = NRF_IRQ_GPIO_CLK;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU ;  //上拉输入
-  GPIO_Init(NRF_IRQ_GPIO_PORT, &GPIO_InitStructure); 
-		  
   /* 这是自定义的宏，用于拉高csn引脚，NRF进入空闲状态 */
   NRF_CSN_HIGH(); 
- 
+
+  /* NRF_SPI 模式配置 */
+  // NRF芯片 支持SPI模式0及模式3，据此设置CPOL CPHA
   SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex; //双线全双工
   SPI_InitStructure.SPI_Mode = SPI_Mode_Master;	 					           //主模式
   SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;	 				         //数据大小8位
   SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;		 			               //时钟极性，空闲时为低
   SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;						           //第1个边沿有效，上升沿为采样时刻
   SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;		   					           //NSS信号由软件产生
-  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8; //8分频，9MHz
+  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_16; //16分频，MHz
   SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;  				       //高位在前
   SPI_InitStructure.SPI_CRCPolynomial = 7;
-  SPI_Init(SPI1, &SPI_InitStructure);
 
-  /* Enable SPI1  */
-  SPI_Cmd(SPI1, ENABLE);
+  SPI_Init(NRF_SPI, &SPI_InitStructure);
+
+  /* 使能 NRF_SPI  */
+  SPI_Cmd(NRF_SPI, ENABLE);
 }
 
 /**
@@ -97,16 +121,16 @@ void SPI_NRF_Init(void)
 u8 SPI_NRF_RW(u8 dat)
 {  	
    /* 当 SPI发送缓冲器非空时等待 */
-  while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
+  while (SPI_I2S_GetFlagStatus(SPI5, SPI_I2S_FLAG_TXE) == RESET);
   
-   /* 通过 SPI2发送一字节数据 */
-  SPI_I2S_SendData(SPI1, dat);		
+   /* 通过 SPI6发送一字节数据 */
+  SPI_I2S_SendData(SPI5, dat);		
  
    /* 当SPI接收缓冲器为空时等待 */
-  while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET);
+  while (SPI_I2S_GetFlagStatus(SPI5, SPI_I2S_FLAG_RXNE) == RESET);
 
   /* Return the byte read from the SPI bus */
-  return SPI_I2S_ReceiveData(SPI1);
+  return SPI_I2S_ReceiveData(SPI5);
 }
 
 /**
@@ -390,57 +414,129 @@ u8 NRF_Rx_Dat(u8 *rxbuf)
   */
 void SPI_NRF2_Init(void)
 {
+//  SPI_InitTypeDef  SPI_InitStructure;
+//  GPIO_InitTypeDef GPIO_InitStructure;
+//  
+//  /*开启相应IO端口的时钟*/
+//  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB
+//                         |NRF2_CSN_GPIO_CLK
+//                         |NRF2_CE_GPIO_CLK
+//                         |NRF2_IRQ_GPIO_CLK,ENABLE);
+
+// /*使能SPI6时钟*/
+//  RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI6, ENABLE);
+
+//   /*配置 SPI_NRF_SPI的 SCK,MISO,MOSI引脚，GPIOA^13,GPIOA^14,GPIOA^15 */
+//  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15;
+//  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
+//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP; //复用功能
+//  GPIO_Init(GPIOB, &GPIO_InitStructure);  
+
+//  /*配置SPI_NRF_SPI的CE引脚,和SPI_NRF_SPI的 CSN 引脚*/
+//   GPIO_InitStructure.GPIO_Pin = NRF2_CSN_PIN;
+//  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
+//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+//  GPIO_Init(NRF2_CSN_GPIO_PORT, &GPIO_InitStructure);
+
+//  GPIO_InitStructure.GPIO_Pin = NRF2_CE_PIN;
+//  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
+//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+//  GPIO_Init(NRF2_CE_GPIO_PORT, &GPIO_InitStructure);
+//		  
+//  /* 这是自定义的宏，用于拉高csn引脚，NRF进入空闲状态 */
+//  NRF2_CSN_HIGH(); 
+// 
+//  SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex; //双线全双工
+//  SPI_InitStructure.SPI_Mode = SPI_Mode_Master;	 					//主模式
+//  SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;	 				//数据大小8位
+//  SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;		 				//时钟极性，空闲时为低
+//  SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;						//第1个边沿有效，上升沿为采样时刻
+//  SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;		   					//NSS信号由软件产生
+//  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8;  //8分频，9MHz
+//  SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;  				//高位在前
+//  SPI_InitStructure.SPI_CRCPolynomial = 7;
+//  SPI_Init(SPI6, &SPI_InitStructure);
+
+//  /* Enable SPI6  */
+//  SPI_Cmd(SPI6, ENABLE);
+
   SPI_InitTypeDef  SPI_InitStructure;
   GPIO_InitTypeDef GPIO_InitStructure;
   
+  RCC_AHB1PeriphClockCmd (NRF2_SPI_SCK_GPIO_CLK | NRF2_SPI_MISO_GPIO_CLK|NRF2_SPI_MOSI_GPIO_CLK, ENABLE);
+
   /*开启相应IO端口的时钟*/
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOG
                          |NRF2_CSN_GPIO_CLK
                          |NRF2_CE_GPIO_CLK
                          |NRF2_IRQ_GPIO_CLK,ENABLE);
 
- /*使能SPI2时钟*/
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
-
-   /*配置 SPI_NRF_SPI的 SCK,MISO,MOSI引脚，GPIOA^13,GPIOA^14,GPIOA^15 */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP; //复用功能
-  GPIO_Init(GPIOB, &GPIO_InitStructure);  
-
-  /*配置SPI_NRF_SPI的CE引脚,和SPI_NRF_SPI的 CSN 引脚*/
-   GPIO_InitStructure.GPIO_Pin = NRF2_CSN_PIN;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  /*配置SPI_NRF_SPI的CE引脚,和SPI_NRF_SPI的 CSN 引脚*/														   
+  GPIO_InitStructure.GPIO_Pin = NRF2_CSN_PIN;	
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;  
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz; 
   GPIO_Init(NRF2_CSN_GPIO_PORT, &GPIO_InitStructure);
-
-  GPIO_InitStructure.GPIO_Pin = NRF2_CE_PIN;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  
+  GPIO_InitStructure.GPIO_Pin = NRF2_CE_PIN;	
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;  
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz; 
   GPIO_Init(NRF2_CE_GPIO_PORT, &GPIO_InitStructure);
-
-  /*配置SPI_NRF_SPI的IRQ引脚*/
-  GPIO_InitStructure.GPIO_Pin = NRF2_IRQ_GPIO_CLK;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU ;  //上拉输入
+  
+  GPIO_InitStructure.GPIO_Pin = NRF2_IRQ_PIN;	
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;  
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz; 
   GPIO_Init(NRF2_IRQ_GPIO_PORT, &GPIO_InitStructure);
-		  
+  
+  /*!< SPI_NRF_SPI 时钟使能 */
+  NRF2_SPI_CLK_INIT(NRF2_SPI_CLK, ENABLE);
+ 
+  //设置引脚复用
+  GPIO_PinAFConfig(NRF2_SPI_SCK_GPIO_PORT,NRF2_SPI_SCK_PINSOURCE,NRF2_SPI_SCK_AF); 
+	GPIO_PinAFConfig(NRF2_SPI_MISO_GPIO_PORT,NRF2_SPI_MISO_PINSOURCE,NRF2_SPI_MISO_AF); 
+	GPIO_PinAFConfig(NRF2_SPI_MOSI_GPIO_PORT,NRF2_SPI_MOSI_PINSOURCE,NRF2_SPI_MOSI_AF); 
+  
+  /*!< 配置 SPI_NRF_SPI 引脚: SCK */
+  GPIO_InitStructure.GPIO_Pin = NRF2_SPI_SCK_PIN;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;  
+  
+  GPIO_Init(NRF2_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
+  
+	/*!< 配置 SPI_NRF2_SPI 引脚: MISO */
+  GPIO_InitStructure.GPIO_Pin = NRF2_SPI_MISO_PIN;
+  GPIO_Init(NRF2_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
+  
+	/*!< 配置 SPI_NRF2_SPI 引脚: MOSI */
+  GPIO_InitStructure.GPIO_Pin = NRF2_SPI_MOSI_PIN;
+  GPIO_Init(NRF2_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);  
+
   /* 这是自定义的宏，用于拉高csn引脚，NRF进入空闲状态 */
   NRF2_CSN_HIGH(); 
- 
-  SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex; //双线全双工
-  SPI_InitStructure.SPI_Mode = SPI_Mode_Master;	 					//主模式
-  SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;	 				//数据大小8位
-  SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;		 				//时钟极性，空闲时为低
-  SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;						//第1个边沿有效，上升沿为采样时刻
-  SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;		   					//NSS信号由软件产生
-  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8;  //8分频，9MHz
-  SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;  				//高位在前
-  SPI_InitStructure.SPI_CRCPolynomial = 7;
-  SPI_Init(SPI2, &SPI_InitStructure);
 
-  /* Enable SPI2  */
-  SPI_Cmd(SPI2, ENABLE);
+  /* NRF_SPI 模式配置 */
+  // NRF芯片 支持SPI模式0及模式3，据此设置CPOL CPHA
+  SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex; //双线全双工
+  SPI_InitStructure.SPI_Mode = SPI_Mode_Master;	 					           //主模式
+  SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;	 				         //数据大小8位
+  SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;		 			               //时钟极性，空闲时为低
+  SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;						           //第1个边沿有效，上升沿为采样时刻
+  SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;		   					           //NSS信号由软件产生
+  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_16; //16分频，MHz
+  SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;  				       //高位在前
+  SPI_InitStructure.SPI_CRCPolynomial = 7;
+
+  SPI_Init(NRF2_SPI, &SPI_InitStructure);
+
+  /* 使能 NRF_SPI  */
+  SPI_Cmd(NRF2_SPI, ENABLE);
 }
 
 
@@ -455,16 +551,16 @@ void SPI_NRF2_Init(void)
 u8 SPI_NRF2_RW(u8 dat)
 {  	
    /* 当 SPI发送缓冲器非空时等待 */
-  while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET);
+  while (SPI_I2S_GetFlagStatus(SPI6, SPI_I2S_FLAG_TXE) == RESET);
   
-   /* 通过 SPI2发送一字节数据 */
-  SPI_I2S_SendData(SPI2, dat);		
+   /* 通过 SPI6发送一字节数据 */
+  SPI_I2S_SendData(SPI6, dat);		
  
    /* 当SPI接收缓冲器为空时等待 */
-  while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_RXNE) == RESET);
+  while (SPI_I2S_GetFlagStatus(SPI6, SPI_I2S_FLAG_RXNE) == RESET);
 
   /* Return the byte read from the SPI bus */
-  return SPI_I2S_ReceiveData(SPI2);
+  return SPI_I2S_ReceiveData(SPI6);
 }
 
 /**

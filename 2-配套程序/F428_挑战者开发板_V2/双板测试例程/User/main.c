@@ -22,7 +22,6 @@
 #include "./key/bsp_key.h"
 
 u8 status;	               // 用于判断接收/发送状态
-u8 status2;                // 用于判断接收/发送状态
 u8 txbuf[32]={0,1,2,3};	   // 发送缓冲
 u8 rxbuf[32];			         // 接收缓冲
 int i=0;
@@ -38,9 +37,6 @@ int main(void)
 {   
 	/* 初始化NRF1 */
   SPI_NRF_Init();
-	
-	/* 初始化NRF2 */
-	SPI_NRF2_Init();
 
   /* 串口1初始化 */
   USARTx_Config();
@@ -68,22 +64,11 @@ void Self_Test(void)
 
   /*判断连接状态*/  
   if(status == SUCCESS)	   
-    printf("\r\n      NRF1与MCU连接成功！ 按 K1 发送数据\r\n");  
+    printf("\r\n      NRF与MCU连接成功！ 按 K1 发送数据\r\n");  
   else	  
-    printf("\r\n  NRF1与MCU连接失败，请重新检查接线。\r\n");
-	
-	
-	/*检测 NRF2 模块与 MCU 的连接*/
-  status = NRF2_Check();
-	
-	 /*判断连接状态*/  
-  if(status == SUCCESS)	   
-    printf("\r\n      NRF2与MCU连接成功！ 按 K2 发送数据\r\n");  
-  else	  
-    printf("\r\n  NRF2与MCU连接失败，请重新检查接线。\r\n");
+    printf("\r\n  NRF与MCU连接失败，请重新检查接线。\r\n");
 
   NRF_RX_Mode();     // NRF1 进入接收模式
-  NRF2_RX_Mode();    // NRF2 进入接收模式
 
   while(1)
   {
@@ -95,11 +80,10 @@ void Self_Test(void)
     {
       for(i=0;i<32;i++)
       {	
-        printf("\r\n NRF1 接收数据为：%d \r\n",rxbuf[i]); 
+        printf("\r\n NRF 接收数据为：%d \r\n",rxbuf[i]); 
       }
       
-      printf("\r\n按 K1 使用NRF1 发送数据\n"); 
-      printf("\r\n按 K2 使用NRF2 发送数据\r\n"); 
+      printf("\r\n按 K1 使用NRF 发送数据\n");  
     }
     
     /* NRF1 发送数据 */
@@ -113,54 +97,16 @@ void Self_Test(void)
       /* 发送数据的状态 */
        if(status == TX_DS)
       {
-        printf("\r\nNRF1 发送数据成功\r\n");
+        printf("\r\nNRF 发送数据成功\r\n");
       }
       else
       {
-        printf("\r\nNRF1 发送数据失败  %d\r\n", status);
+        printf("\r\nNRF 发送数据失败  %d\r\n", status);
       }
       
-      printf("\r\nNRF1 进入接收模式\r\n"); 
+      printf("\r\nNRF 进入接收模式\r\n"); 
 
       NRF_RX_Mode();
-    }
-    
-    /* 等待 NRF2 接收数据 */
-    status2 = NRF2_Rx_Dat(rxbuf);
-
-    /* 判断接收状态 */
-    if(status2 == RX_DR)
-    {
-      for(i=0;i<32;i++)
-      {	
-        printf("\r\n NRF2 接收数据为：%d \r\n",rxbuf[i]); 
-      }
-      
-      printf("\r\n按 K1 使用NRF1 发送数据\n"); 
-      printf("\r\n按 K2 使用NRF2 发送数据\r\n"); 
-    }
-    
-    /* NRF2 发送数据 */
-    if (Key_Scan(KEY2_GPIO_PORT, KEY2_PIN) == KEY_ON)    // 按键 2 按下，开始送数据
-    { 
-      /* 发送数据 */
-      NRF2_TX_Mode();
-           
-      status2 = NRF2_Tx_Dat(txbuf);
-      
-      /* 发送数据的状态 */
-       if(status2 == TX_DS)
-      {
-        printf("\r\nNRF2 发送数据成功\r\n");
-      }
-      else
-      {
-        printf("\r\nNRF2 发送数据失败  %d\r\n", status);
-      }
-      
-      printf("\r\nNRF2 进入接收模式\r\n"); 
-
-      NRF2_RX_Mode();
     }
   }
 }
