@@ -29,10 +29,10 @@ NRF24L01 模块插入NRF专用接口，电脑端使用串口调试助手，选择电脑与STM32相连的COM口
     2_3.3V<--->3.3V
     3_CE<--->PC5
     4_CSN<--->PC6
-    5_SCK<--->PB13
-    6_MOSI<--->PB15
-    7_MISO<--->PB14
-
+    5_SCK<--->PA5
+    6_MOSI<--->PA7
+    7_MISO<--->PA6
+    8_IRQ<--->PC4
 
 串口(TTL-USB TO USART)：
 CH340的收发引脚与STM32的发收引脚相连。
