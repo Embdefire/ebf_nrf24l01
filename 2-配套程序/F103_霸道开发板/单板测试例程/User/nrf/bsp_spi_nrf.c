@@ -65,7 +65,7 @@ void SPI_NRF_Init(void)
 
 
    /*配置SPI_NRF_SPI的IRQ引脚*/
-  GPIO_InitStructure.GPIO_Pin = NRF_IRQ_GPIO_CLK;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU ;  //上拉输入
   GPIO_Init(NRF_IRQ_GPIO_PORT, &GPIO_InitStructure); 
