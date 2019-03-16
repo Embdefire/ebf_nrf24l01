@@ -51,17 +51,18 @@ int main(void)
   if(status == SUCCESS)	   
     printf("\r\n      NRF与MCU连接成功\r\n");  
   else	  
-    printf("\r\n   正在检测NRF与MCU是否正常连接。。。\r\n");
+    printf("\r\n   请检测NRF与MCU是否正常连接。。。\r\n");
   
-  printf("\r\n 进入接收模式\r\n"); 
+  printf("\r\n NRF进入接收模式，按 K1 发送数据\r\n"); 
 
 
   for(i=0;i<32;i++)
   {	
-    txbuf[i] = i;
-//    printf("\r\n 发送数据为：%d \r\n",txbuf[i]); 
+    txbuf[i] = i; 
   }
-  NRF_RX_Mode();  
+  
+  NRF_RX_Mode();     // NRF 进入接收模式
+  
   while(1)
   {  		 	
     /* 等待接收数据 */
@@ -74,9 +75,11 @@ int main(void)
       {	
         printf("\r\n 接收数据为：%d \r\n",rxbuf[i]); 
       }
+      
+      printf("\r\n进入接收模式，按 K1 发送数据\r\n"); 
     }
      
-    if (Key_Scan(KEY2_GPIO_PORT, KEY2_GPIO_PIN) == KEY_ON)    // 按键按下，开始送数据
+    if (Key_Scan(KEY1_GPIO_PORT, KEY1_GPIO_PIN) == KEY_ON)    // 按键按下，开始送数据
     { 
       /* 发送数据 */
       NRF_TX_Mode();
@@ -93,7 +96,7 @@ int main(void)
         printf("\r\n发送数据失败  %d\r\n", status);
       }
       
-      printf("\r\n 进入接收模式\r\n"); 
+      printf("\r\n 进入接收模式，按 K1 发送数据\r\n"); 
 
       NRF_RX_Mode();
     }

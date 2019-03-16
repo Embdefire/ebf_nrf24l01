@@ -8,10 +8,10 @@
 
 
 #define TX_ADR_WIDTH 	5  	//发射地址宽度
-#define TX_PLOAD_WIDTH  4   //发射数据通道有效数据宽度0~32Byte 
+#define TX_PLOAD_WIDTH  32   //发射数据通道有效数据宽度0~32Byte 
 
 #define RX_ADR_WIDTH    5
-#define RX_PLOAD_WIDTH  4
+#define RX_PLOAD_WIDTH  32
 
 
 
@@ -58,24 +58,46 @@
 
 #define RX_DR		0x40 //接收到数据中断标志位
 
-//#define NRF_CSN_HIGH()      GPIO_SetBits(GPIOA, GPIO_Pin_1)
-//#define NRF_CSN_LOW()       GPIO_ResetBits(GPIOA, GPIO_Pin_1)		        //csn置低
-//#define NRF_CE_HIGH()	      GPIO_SetBits(GPIOA,GPIO_Pin_2)
-//#define NRF_CE_LOW()	      GPIO_ResetBits(GPIOA,GPIO_Pin_2)			      //CE置低
-//#define NRF_Read_IRQ()		  GPIO_ReadInputDataBit ( GPIOA, GPIO_Pin_3)  //中断引脚
+/* NRF1 管脚 */
 
-#define NRF_CSN_HIGH()      GPIO_SetBits(GPIOG, GPIO_Pin_15)
-#define NRF_CSN_LOW()       GPIO_ResetBits(GPIOG, GPIO_Pin_15)		        //csn置低
-#define NRF_CE_HIGH()	      GPIO_SetBits(GPIOG,GPIO_Pin_8)
-#define NRF_CE_LOW()	      GPIO_ResetBits(GPIOG,GPIO_Pin_8)			      //CE置低
-#define NRF_Read_IRQ()		  GPIO_ReadInputDataBit ( GPIOC, GPIO_Pin_4)  //中断引脚
+#define NRF_CSN_GPIO_PORT    GPIOC
+#define NRF_CSN_PIN          GPIO_Pin_6
+#define NRF_CSN_GPIO_CLK     RCC_APB2Periph_GPIOC
+
+#define NRF_CE_GPIO_PORT    GPIOC
+#define NRF_CE_PIN          GPIO_Pin_5
+#define NRF_CE_GPIO_CLK     RCC_APB2Periph_GPIOC
+
+#define NRF_IRQ_GPIO_PORT    GPIOC
+#define NRF_IRQ_PIN          GPIO_Pin_4
+#define NRF_IRQ_GPIO_CLK     RCC_APB2Periph_GPIOC
+
+#define NRF_CSN_HIGH()      GPIO_SetBits(NRF_CSN_GPIO_PORT, NRF_CSN_PIN)
+#define NRF_CSN_LOW()       GPIO_ResetBits(NRF_CSN_GPIO_PORT, NRF_CSN_PIN)		        //csn置低
+#define NRF_CE_HIGH()	      GPIO_SetBits(NRF_CE_GPIO_PORT,NRF_CE_PIN)
+#define NRF_CE_LOW()	      GPIO_ResetBits(NRF_CE_GPIO_PORT,NRF_CE_PIN)			      //CE置低
+#define NRF_Read_IRQ()		  GPIO_ReadInputDataBit(NRF_IRQ_GPIO_PORT, NRF_IRQ_PIN)  //中断引脚
+
+/* NRF2 管脚 */
+
+#define NRF2_CSN_GPIO_PORT    GPIOB
+#define NRF2_CSN_PIN          GPIO_Pin_8
+#define NRF2_CSN_GPIO_CLK     RCC_APB2Periph_GPIOB
+
+#define NRF2_CE_GPIO_PORT    GPIOC
+#define NRF2_CE_PIN          GPIO_Pin_7
+#define NRF2_CE_GPIO_CLK     RCC_APB2Periph_GPIOC
+
+#define NRF2_IRQ_GPIO_PORT    GPIOB
+#define NRF2_IRQ_PIN          GPIO_Pin_12
+#define NRF2_IRQ_GPIO_CLK     RCC_APB2Periph_GPIOB
 
 
-#define NRF2_CSN_HIGH()     GPIO_SetBits(GPIOB, GPIO_Pin_8)
-#define NRF2_CSN_LOW()      GPIO_ResetBits(GPIOB, GPIO_Pin_8)		        //csn置低
-#define NRF2_CE_HIGH()	    GPIO_SetBits(GPIOB,GPIO_Pin_12)
-#define NRF2_CE_LOW()	      GPIO_ResetBits(GPIOB,GPIO_Pin_12)			      //CE置低
-#define NRF2_Read_IRQ()		  GPIO_ReadInputDataBit ( GPIOB, GPIO_Pin_9)  //中断引脚
+#define NRF2_CSN_HIGH()     GPIO_SetBits(NRF2_CSN_GPIO_PORT, NRF2_CSN_PIN)
+#define NRF2_CSN_LOW()      GPIO_ResetBits(NRF2_CSN_GPIO_PORT, NRF2_CSN_PIN)		        //csn置低
+#define NRF2_CE_HIGH()	    GPIO_SetBits(NRF2_CE_GPIO_PORT,NRF2_CE_PIN)
+#define NRF2_CE_LOW()	      GPIO_ResetBits(NRF2_CE_GPIO_PORT,NRF2_CE_PIN)			      //CE置低
+#define NRF2_Read_IRQ()		  GPIO_ReadInputDataBit ( NRF2_IRQ_GPIO_PORT, NRF2_IRQ_PIN)  //中断引脚
 
 void SPI_NRF_Init(void);
 u8 SPI_NRF_RW(u8 dat);
@@ -107,24 +129,3 @@ u8 NRF2_Tx_Dat(u8 *txbuf);
 u8 NRF2_Check(void); 
 
 #endif /* __SPI_NRF_H */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

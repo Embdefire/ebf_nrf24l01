@@ -8,7 +8,7 @@
   ******************************************************************************
   * @attention
   *
-  * 实验平台:野火 iSO STM32 开发板 
+  * 实验平台:野火 F103 指南者开发板  
   * 论坛    :http://www.chuxue123.com
   * 淘宝    :http://firestm32.taobao.com
   *
@@ -39,8 +39,9 @@ void SPI_NRF_Init(void)
   
   /*开启相应IO端口的时钟*/
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA
-                         |RCC_APB2Periph_GPIOC
-                         |RCC_APB2Periph_GPIOG,ENABLE);
+                         |NRF_CSN_GPIO_CLK
+                         |NRF_CE_GPIO_CLK
+                         |NRF_IRQ_GPIO_CLK,ENABLE);
 
  /*使能SPI1时钟*/
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
@@ -52,17 +53,22 @@ void SPI_NRF_Init(void)
   GPIO_Init(GPIOA, &GPIO_InitStructure);  
 
   /*配置SPI_NRF_SPI的CE引脚,和SPI_NRF_SPI的 CSN 引脚*/
-   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8|GPIO_Pin_15;
+   GPIO_InitStructure.GPIO_Pin = NRF_CSN_PIN;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-  GPIO_Init(GPIOG, &GPIO_InitStructure);
+  GPIO_Init(NRF_CSN_GPIO_PORT, &GPIO_InitStructure);
+  
+  GPIO_InitStructure.GPIO_Pin = NRF_CE_PIN;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  GPIO_Init(NRF_CE_GPIO_PORT, &GPIO_InitStructure);
 
 
    /*配置SPI_NRF_SPI的IRQ引脚*/
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
+  GPIO_InitStructure.GPIO_Pin = NRF_IRQ_GPIO_CLK;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU ;  //上拉输入
-  GPIO_Init(GPIOC, &GPIO_InitStructure); 
+  GPIO_Init(NRF_IRQ_GPIO_PORT, &GPIO_InitStructure); 
 		  
   /* 这是自定义的宏，用于拉高csn引脚，NRF进入空闲状态 */
   NRF_CSN_HIGH(); 
@@ -354,26 +360,28 @@ u8 NRF_Rx_Dat(u8 *rxbuf)
 	u8 state; 
 	NRF_CE_HIGH();	 //进入接收状态
 	 /*等待接收中断*/
-	while(NRF_Read_IRQ()!=0); 
-	
-	NRF_CE_LOW();  	 //进入待机状态
-	/*读取status寄存器的值  */               
-	state=SPI_NRF_ReadReg(STATUS);
-	 
-	/* 清除中断标志*/      
-	SPI_NRF_WriteReg(NRF_WRITE_REG+STATUS,state);
+	while(NRF_Read_IRQ()==0)
+  {
+    NRF_CE_LOW();  	 //进入待机状态
+    /*读取status寄存器的值  */               
+    state=SPI_NRF_ReadReg(STATUS);
+     
+    /* 清除中断标志*/      
+    SPI_NRF_WriteReg(NRF_WRITE_REG+STATUS,state);
 
-	/*判断是否接收到数据*/
-	if(state&RX_DR)                                 //接收到数据
-	{
-	  SPI_NRF_ReadBuf(RD_RX_PLOAD,rxbuf,RX_PLOAD_WIDTH);//读取数据
-	     SPI_NRF_WriteReg(FLUSH_RX,NOP);          //清除RX FIFO寄存器
-	  return RX_DR; 
-	}
-	else    
-		return ERROR;                    //没收到任何数据
+    /*判断是否接收到数据*/
+    if(state&RX_DR)                                 //接收到数据
+    {
+      SPI_NRF_ReadBuf(RD_RX_PLOAD,rxbuf,RX_PLOAD_WIDTH);//读取数据
+         SPI_NRF_WriteReg(FLUSH_RX,NOP);          //清除RX FIFO寄存器
+      return RX_DR; 
+    }
+    else    
+      return ERROR;                    //没收到任何数据
+  }
+  
+  return ERROR;                    //没收到任何数据
 }
-
 
 /**
   * @brief  SPI的 I/O配置
@@ -386,9 +394,12 @@ void SPI_NRF2_Init(void)
   GPIO_InitTypeDef GPIO_InitStructure;
   
   /*开启相应IO端口的时钟*/
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB
+                         |NRF2_CSN_GPIO_CLK
+                         |NRF2_CE_GPIO_CLK
+                         |NRF2_IRQ_GPIO_CLK,ENABLE);
 
- /*使能SPI1时钟*/
+ /*使能SPI2时钟*/
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
 
    /*配置 SPI_NRF_SPI的 SCK,MISO,MOSI引脚，GPIOA^13,GPIOA^14,GPIOA^15 */
@@ -398,17 +409,21 @@ void SPI_NRF2_Init(void)
   GPIO_Init(GPIOB, &GPIO_InitStructure);  
 
   /*配置SPI_NRF_SPI的CE引脚,和SPI_NRF_SPI的 CSN 引脚*/
-   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8|GPIO_Pin_12;
+   GPIO_InitStructure.GPIO_Pin = NRF2_CSN_PIN;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
+  GPIO_Init(NRF2_CSN_GPIO_PORT, &GPIO_InitStructure);
 
+  GPIO_InitStructure.GPIO_Pin = NRF2_CE_PIN;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  GPIO_Init(NRF2_CE_GPIO_PORT, &GPIO_InitStructure);
 
-   /*配置SPI_NRF_SPI的IRQ引脚*/
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+  /*配置SPI_NRF_SPI的IRQ引脚*/
+  GPIO_InitStructure.GPIO_Pin = NRF2_IRQ_GPIO_CLK;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU ;  //上拉输入
-  GPIO_Init(GPIOB, &GPIO_InitStructure); 
+  GPIO_Init(NRF2_IRQ_GPIO_PORT, &GPIO_InitStructure);
 		  
   /* 这是自定义的宏，用于拉高csn引脚，NRF进入空闲状态 */
   NRF2_CSN_HIGH(); 
@@ -703,24 +718,26 @@ u8 NRF2_Rx_Dat(u8 *rxbuf)
 	u8 state; 
 	NRF2_CE_HIGH();	 //进入接收状态
 	 /*等待接收中断*/
-	while(NRF2_Read_IRQ()!=0); 
-	
-	NRF2_CE_LOW();  	 //进入待机状态
-	/*读取status寄存器的值  */               
-	state=SPI_NRF2_ReadReg(STATUS);
-	 
-	/* 清除中断标志*/      
-	SPI_NRF2_WriteReg(NRF_WRITE_REG+STATUS,state);
-
-	/*判断是否接收到数据*/
-	if(state&RX_DR)                                 //接收到数据
+	while(NRF2_Read_IRQ()==0) 
 	{
-	  SPI_NRF2_ReadBuf(RD_RX_PLOAD,rxbuf,RX_PLOAD_WIDTH);//读取数据
-	     SPI_NRF2_WriteReg(FLUSH_RX,NOP);          //清除RX FIFO寄存器
-	  return RX_DR; 
-	}
-	else    
-		return ERROR;                    //没收到任何数据
+    NRF2_CE_LOW();  	 //进入待机状态
+    /*读取status寄存器的值  */               
+    state=SPI_NRF2_ReadReg(STATUS);
+     
+    /* 清除中断标志*/      
+    SPI_NRF2_WriteReg(NRF_WRITE_REG+STATUS,state);
+
+    /*判断是否接收到数据*/
+    if(state&RX_DR)                                 //接收到数据
+    {
+      SPI_NRF2_ReadBuf(RD_RX_PLOAD,rxbuf,RX_PLOAD_WIDTH);//读取数据
+         SPI_NRF2_WriteReg(FLUSH_RX,NOP);          //清除RX FIFO寄存器
+      return RX_DR; 
+    }
+    else    
+      return ERROR;                    //没收到任何数据
+  }
+  return ERROR;                    //没收到任何数据
 }
 
 
