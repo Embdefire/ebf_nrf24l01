@@ -101,49 +101,6 @@
 #define NRF_CE_LOW()	      GPIO_ResetBits(NRF_CE_GPIO_PORT,NRF_CE_PIN)			      //CE÷√µÕ
 #define NRF_Read_IRQ()		  GPIO_ReadInputDataBit(NRF_IRQ_GPIO_PORT, NRF_IRQ_PIN)  //÷–∂œ“˝Ω≈
 
-/* NRF2 π‹Ω≈ */
-
-#define NRF2_SPI                           SPI3
-#define NRF2_SPI_CLK                       RCC_APB1Periph_SPI3
-#define NRF2_SPI_CLK_INIT                  RCC_APB1PeriphClockCmd
-
-#define NRF2_SPI_SCK_PIN                   GPIO_Pin_10                
-#define NRF2_SPI_SCK_GPIO_PORT             GPIOC                      
-#define NRF2_SPI_SCK_GPIO_CLK              RCC_AHB1Periph_GPIOC
-#define NRF2_SPI_SCK_PINSOURCE             GPIO_PinSource10
-#define NRF2_SPI_SCK_AF                    GPIO_AF_SPI3
-
-#define NRF2_SPI_MISO_PIN                  GPIO_Pin_11            
-#define NRF2_SPI_MISO_GPIO_PORT            GPIOC                  
-#define NRF2_SPI_MISO_GPIO_CLK             RCC_AHB1Periph_GPIOC
-#define NRF2_SPI_MISO_PINSOURCE            GPIO_PinSource11
-#define NRF2_SPI_MISO_AF                   GPIO_AF_SPI3
-
-#define NRF2_SPI_MOSI_PIN                  GPIO_Pin_12              
-#define NRF2_SPI_MOSI_GPIO_PORT            GPIOC                     
-#define NRF2_SPI_MOSI_GPIO_CLK             RCC_AHB1Periph_GPIOC
-#define NRF2_SPI_MOSI_PINSOURCE            GPIO_PinSource12
-#define NRF2_SPI_MOSI_AF                   GPIO_AF_SPI3
-
-#define NRF2_CSN_GPIO_PORT    GPIOA
-#define NRF2_CSN_PIN          GPIO_Pin_4
-#define NRF2_CSN_GPIO_CLK     RCC_AHB1Periph_GPIOA
-
-#define NRF2_CE_GPIO_PORT    GPIOA
-#define NRF2_CE_PIN          GPIO_Pin_6
-#define NRF2_CE_GPIO_CLK     RCC_AHB1Periph_GPIOA
-
-#define NRF2_IRQ_GPIO_PORT    GPIOA
-#define NRF2_IRQ_PIN          GPIO_Pin_8
-#define NRF2_IRQ_GPIO_CLK     RCC_AHB1Periph_GPIOA
-
-
-#define NRF2_CSN_HIGH()     GPIO_SetBits(NRF2_CSN_GPIO_PORT, NRF2_CSN_PIN)
-#define NRF2_CSN_LOW()      GPIO_ResetBits(NRF2_CSN_GPIO_PORT, NRF2_CSN_PIN)		        //csn÷√µÕ
-#define NRF2_CE_HIGH()	    GPIO_SetBits(NRF2_CE_GPIO_PORT,NRF2_CE_PIN)
-#define NRF2_CE_LOW()	      GPIO_ResetBits(NRF2_CE_GPIO_PORT,NRF2_CE_PIN)			      //CE÷√µÕ
-#define NRF2_Read_IRQ()		  GPIO_ReadInputDataBit ( NRF2_IRQ_GPIO_PORT, NRF2_IRQ_PIN)  //÷–∂œ“˝Ω≈
-
 void SPI_NRF_Init(void);
 u8 SPI_NRF_RW(u8 dat);
 u8 SPI_NRF_ReadReg(u8 reg );
@@ -157,20 +114,5 @@ void NRF_RX_Mode(void);
 u8 NRF_Rx_Dat(u8 *rxbuf);
 u8 NRF_Tx_Dat(u8 *txbuf);
 u8 NRF_Check(void); 
-
-
-void SPI_NRF2_Init(void);
-u8 SPI_NRF2_RW(u8 dat);
-u8 SPI_NRF2_ReadReg(u8 reg );
-u8 SPI_NRF2_WriteReg(u8 reg,u8 dat);
-
-u8 SPI_NRF2_ReadBuf(u8 reg,u8 *pBuf,u8 bytes);
-u8 SPI_NRF2_WriteBuf(u8 reg ,u8 *pBuf,u8 bytes);	
-
-void NRF2_TX_Mode(void);
-void NRF2_RX_Mode(void);
-u8 NRF2_Rx_Dat(u8 *rxbuf);
-u8 NRF2_Tx_Dat(u8 *txbuf);
-u8 NRF2_Check(void); 
 
 #endif /* __SPI_NRF_H */
