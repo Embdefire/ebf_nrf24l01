@@ -43,16 +43,22 @@ int main(void)
 	SPI_NRF2_Init();
 
   /* 串口1初始化 */
-  USART1_Config();
+//  USART1_Config();
   
   /* 按键初始化 */
   Key_GPIO_Config();
 
-  printf("\r\n 这是一个 NRF24L01 无线传输实验 \r\n");
-  printf("\r\n 这是无线传输 主机端 的反馈信息\r\n");
-  printf("\r\n   正在检测NRF与MCU是否正常连接。。。\r\n");
+//  printf("\r\n 这是一个 NRF24L01 无线传输实验 \r\n");
+//  printf("\r\n 这是无线传输 主机端 的反馈信息\r\n");
+//  printf("\r\n   正在检测NRF与MCU是否正常连接。。。\r\n");
 
-	Self_Test();	
+	status = NRF_Check(); 
+
+  /*判断连接状态*/  
+  if(status == SUCCESS)	   
+    printf("\r\n  NRF1与MCU连接成功！ 按 K1 发送数据\r\n");  
+  else	  
+    printf("\r\n  NRF1与MCU连接失败，请重新检查接线。\r\n");
 
 }
 
