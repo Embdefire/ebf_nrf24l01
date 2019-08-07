@@ -88,9 +88,9 @@
 #define NRF2_CE_PIN          GPIO_Pin_7
 #define NRF2_CE_GPIO_CLK     RCC_APB2Periph_GPIOC
 
-#define NRF2_IRQ_GPIO_PORT    GPIOB
-#define NRF2_IRQ_PIN          GPIO_Pin_12
-#define NRF2_IRQ_GPIO_CLK     RCC_APB2Periph_GPIOB
+#define NRF2_IRQ_GPIO_PORT    GPIOA
+#define NRF2_IRQ_PIN          GPIO_Pin_4
+#define NRF2_IRQ_GPIO_CLK     RCC_APB2Periph_GPIOA
 
 
 #define NRF2_CSN_HIGH()     GPIO_SetBits(NRF2_CSN_GPIO_PORT, NRF2_CSN_PIN)

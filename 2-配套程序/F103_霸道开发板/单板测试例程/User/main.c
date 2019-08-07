@@ -10,8 +10,8 @@
   * @attention
   *
   * 实验平台:野火STM32 霸道开发板 
-  * 论坛    :http://www.chuxue123.com
-  * 淘宝    :http://firestm32.taobao.com
+  * 论坛    :http://www.firebbs.cn
+  * 淘宝    :https://fire-stm32.taobao.com
   *
   ******************************************************************************
   */
@@ -20,7 +20,7 @@
 #include "bsp_usart1.h"
 #include "bsp_spi_nrf.h"
 #include "./key/bsp_key.h"
-
+#include "./led/bsp_led.h"
 u8 status;	               // 用于判断接收/发送状态
 u8 status2;                // 用于判断接收/发送状态
 u8 txbuf[32]={0,1,2,3};	   // 发送缓冲
@@ -36,6 +36,8 @@ void Self_Test(void);
   */
 int main(void)                  
 {   
+	
+	LED_GPIO_Config();
 	/* 初始化NRF1 */
   SPI_NRF_Init();
 	
@@ -43,23 +45,17 @@ int main(void)
 	SPI_NRF2_Init();
 
   /* 串口1初始化 */
-//  USART1_Config();
+  USART1_Config();
   
   /* 按键初始化 */
   Key_GPIO_Config();
 
-//  printf("\r\n 这是一个 NRF24L01 无线传输实验 \r\n");
-//  printf("\r\n 这是无线传输 主机端 的反馈信息\r\n");
-//  printf("\r\n   正在检测NRF与MCU是否正常连接。。。\r\n");
+  printf("\r\n 这是一个 NRF24L01 无线传输实验 \r\n");
+  printf("\r\n 这是无线传输 主机端 的反馈信息\r\n");
+  printf("\r\n   正在检测NRF与MCU是否正常连接。。。\r\n");
 
-	status = NRF_Check(); 
 
-  /*判断连接状态*/  
-  if(status == SUCCESS)	   
-    printf("\r\n  NRF1与MCU连接成功！ 按 K1 发送数据\r\n");  
-  else	  
-    printf("\r\n  NRF1与MCU连接失败，请重新检查接线。\r\n");
-
+  Self_Test();
 }
 
  /**
@@ -111,6 +107,7 @@ void Self_Test(void)
     /* NRF1 发送数据 */
     if (Key_Scan(KEY1_GPIO_PORT, KEY1_GPIO_PIN) == KEY_ON)    // 按键按下，开始送数据
     { 
+			LED1_TOGGLE;
       /* 发送数据 */
       NRF_TX_Mode();
            
@@ -151,6 +148,7 @@ void Self_Test(void)
     /* NRF2 发送数据 */
     if (Key_Scan(KEY2_GPIO_PORT, KEY2_GPIO_PIN) == KEY_ON)    // 按键 2 按下，开始送数据
     { 
+				LED2_TOGGLE;
       /* 发送数据 */
       NRF2_TX_Mode();
            
