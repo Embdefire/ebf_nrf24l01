@@ -15,6 +15,7 @@
   ******************************************************************************
   */ 
 #include "bsp_spi_nrf.h"
+#include "./usart/bsp_debug_usart.h"
 
  u8 RX_BUF[RX_PLOAD_WIDTH];		//接收数据缓存
  u8 TX_BUF[TX_PLOAD_WIDTH];		//发射数据缓存
@@ -150,7 +151,7 @@ u8 SPI_NRF_WriteReg(u8 reg,u8 dat)
 	status = SPI_NRF_RW(reg);
 		 
 	 /*向寄存器写入数据*/
-    SPI_NRF_RW(dat); 
+    SPI_NRF_RW(dat);
 	          
 	/*CSN拉高，完成*/	   
   	NRF_CSN_HIGH();	
@@ -306,10 +307,10 @@ void NRF_TX_Mode(void)
   * @param  无
   * @retval SUCCESS/ERROR 连接正常/连接失败
   */
+static u8 buf[5]={0xC2,0xC2,0xC2,0xC2,0xC2};
+u8 buf1[5];
 u8 NRF_Check(void)
 {
-	u8 buf[5]={0xC2,0xC2,0xC2,0xC2,0xC2};
-	u8 buf1[5];
 	u8 i; 
 	 
 	/*写入5个字节的地址.  */  
