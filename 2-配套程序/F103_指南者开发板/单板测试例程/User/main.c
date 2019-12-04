@@ -23,7 +23,7 @@
 
 u8 status;	               // 用于判断接收/发送状态
 u8 status2;                // 用于判断接收/发送状态
-u8 txbuf[32]={0,1,2,3};	   // 发送缓冲
+u8 txbuf[32];	             // 发送缓冲
 u8 rxbuf[32];			         // 接收缓冲
 int i=0;
 
@@ -84,6 +84,11 @@ void Self_Test(void)
 
   NRF_RX_Mode();     // NRF1 进入接收模式
   NRF2_RX_Mode();    // NRF2 进入接收模式
+  
+  for(i=0;i<32;i++)
+  {	
+    txbuf[i] = i; 
+  }
 
   while(1)
   {
